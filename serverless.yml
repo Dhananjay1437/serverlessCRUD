@@ -2,19 +2,62 @@
 service: backend-notes
 
 frameworkVersion: '3'
+plugins:
+  - serverless-offline
+  #- serverless-domain-manager
+
+custom:
+  allowedHeaders:
+    - Accept
+    - Content-Type
+    - Content-Length
+    - Authorization
+    - X-Amz-Date
+    - X-Api-Key
+    - X-Amz-Security-Token
+    - X-Amz-User-Agent
+    - app_user_id
+    - app_user_name
+  #customDomain:
+  #domainName: api.notesapp.xyz
+  #basePath: 'v1'
+  #stage: ${self:provider.stage}
+  #certificateName: notesapp.xyz
+  #createRoute53Record: true
+functions: ${file(yml/function.yml)}
+
 
 provider:
   name: aws
   runtime: nodejs16.x
-  region: ap-south-1
+  region: ap-northeast-1
   stage: prod
   memorySize: 128
-  timeout: 5
+  timeout: 30
   endpointType: regional
   environment:
     NOTES_TABLE: ${self:service}-${opt:stage,self:provider.stage}
+  iamRoleStatements:
+    - Effect: Allow
+      Action: 
+        - dynamodb:Query
+        - dynamodb:PutItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.NOTES_TABLE}"
 resources:
   Resources:
+    
+    ApiGatewayAuthorizer:
+      Type: AWS::ApiGateway::Authorizer
+      Properties:
+        AuthorizerResultTtlInSeconds: 300
+        IdentitySource: method.request.header.Authorization
+        Name: Cognito
+        RestApiId:
+          Ref : ApiGatewayRestApi
+        Type: COGNITO_USER_POOLS
+        ProviderARNs:
+          - arn:aws:cognito-idp:ap-northeast-1:993544270222:userpool/ap-northeast-1_xlUsg8ode
     NotesTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: Retain

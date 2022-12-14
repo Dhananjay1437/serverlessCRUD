@@ -12,7 +12,11 @@
   "dependencies": {
     "aws-sdk": "^2.1252.0",
     "moment": "^2.29.4",
+    "mysql": "^2.18.1",
     "underscore": "^1.13.6",
     "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "serverless-offline": "^11.3.0"
   }
 }
